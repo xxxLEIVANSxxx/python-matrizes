@@ -5,8 +5,7 @@ import numpy
 import random
 import time
 import logging
-import threading
-import Queue
+import multiprocessing
 
 def cria_matriz(linhas, colunas):
   A = []
@@ -23,6 +22,7 @@ def multiplica_linha_coluna(queue, queue_resultados, matrizA, matrizB):
         valor = 0
         for k in range(len(matrizB)):
             valor = valor + matrizA[i][k] * matrizB[k][j]
+        
         queue.task_done()
         queue_resultados.put((i, j, valor))
 
@@ -35,11 +35,11 @@ if __name__ == '__main__':
     matrizC = numpy.zeros(shape=(linhas,colunas))
 
     print("{}: Multiplicando matrizes".format(time.strftime('%c')))
-    queue = Queue.Queue()
-    queue_resultados = Queue.Queue()
+    queue = multiprocessing.JoinableQueue()
+    queue_resultados = multiprocessing.JoinableQueue()
     for i in range(2):
-        worker = threading.Thread(target=multiplica_linha_coluna, args=(queue, queue_resultados, matrizA, matrizB,))
-        worker.setDaemon(True)
+        worker = multiprocessing.Process(target=multiplica_linha_coluna, args=(queue, queue_resultados, matrizA, matrizB,))
+        worker.daemon = True
         worker.start()
 
     for i in range(len(matrizA)):
